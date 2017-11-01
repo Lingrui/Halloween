@@ -22,7 +22,7 @@ print(train.head())
 
 #how large the training data is 
 print(train.shape)
-
+'''
 z = {'EAP': 'Edgar Allen Poe', 'MWS': 'Mary Shelley', 'HPL': 'HP Lovecraft'}
 data = [go.Bar(
             x = train.author.map(z).unique(),
@@ -87,3 +87,46 @@ f3.write(codecs.decode(hpl_64,'base64'))
 f3.close()
 img3 = imread("hpl.png")
 hcmask3 = img3
+'''
+
+#storing the first text element as a string
+import nltk
+#nltk.download('punkt')
+#Tokenization
+first_text = train.text.values[0]
+print (first_text)
+print ('='*90)
+print(first_text.split(' '))
+
+first_text_list = nltk.word_tokenize(first_text)
+print ('='*90)
+print(first_text_list)
+
+#Stopword removal
+nltk.download('stopwords')
+stopwords = nltk.corpus.stopwords.words('english')
+print(len(stopwords))
+print(stopwords)
+
+first_text_list_cleaned = [word for word in first_text_list if word.lower() not in stopwords]
+print(first_text_list_cleaned)
+print("="*90)
+print("Length of original list: {0} words\n"
+      "Length of list after stopwords removal: {1} words"
+      .format(len(first_text_list), len(first_text_list_cleaned)))
+	
+#Stemming
+stemmer = nltk.stem.PorterStemmer()
+print("The stemmed form of running is: {}".format(stemmer.stem("running")))
+print("The stemmed form of runs is: {}".format(stemmer.stem("runs")))
+print("The stemmed form of run is: {}".format(stemmer.stem("run")))
+
+#Vectorizing raw text 
+#defining our sentence
+sentence = ["I love to eat Burgers",
+			"I love to eat Fries"]
+vectorizer = CountVectorizer(min_df=0)
+sentence_transform = vectorizer.fit_transform(sentence)
+
+print ("\nThe features are:\n {}".format(vectorizer.get_feature_names()))
+print ("\nThe vectorized array looks like:\n {}".format(sentence_transform.toarray()))

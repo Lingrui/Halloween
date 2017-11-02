@@ -178,12 +178,11 @@ for dev_index, val_index in kf.split(train_X):
     break
 print("cv scores : ", cv_scores)
 
+'''
 pred_train_df = pd.DataFrame(pred_train)
 joined = pd.DataFrame(train_df["id"]).join(pred_train_df)
 joined.to_csv("predictions.csv",index=False)
-#####################################################
-
-#####################################################
+'''
 
 ### Plot the important variables ###
 fig, ax = plt.subplots(figsize=(12,12))
@@ -195,7 +194,8 @@ plt.savefig("important_variables.png")
 ######Text Based Features#######
 
 ### Fit transform the tfidf vectorizer ###
-tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,3))
+#tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,3))
+tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,1))
 full_tfidf = tfidf_vec.fit_transform(train_df['text'].values.tolist() + test_df['text'].values.tolist())
 train_tfidf = tfidf_vec.transform(train_df['text'].values.tolist())
 test_tfidf = tfidf_vec.transform(test_df['text'].values.tolist())
@@ -366,13 +366,6 @@ out_df = pd.DataFrame(pred_full_test)
 out_df.columns = ['EAP', 'HPL', 'MWS']
 out_df.insert(0, 'id', test_id)
 out_df.to_csv("sub_fe.csv", index=False)
-
-
-
-
-
-
-
 
 
 

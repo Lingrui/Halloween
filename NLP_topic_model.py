@@ -130,3 +130,31 @@ sentence_transform = vectorizer.fit_transform(sentence)
 
 print ("\nThe features are:\n {}".format(vectorizer.get_feature_names()))
 print ("\nThe vectorized array looks like:\n {}".format(sentence_transform.toarray()))
+
+print ("\n")
+print ("*"*90)
+print (sentence_transform)
+print ("*"*90)
+
+class PorterStemCountVectorizer(CountVectorizer):
+	def build_analyzer(self):
+		analyzer = super(PorterStemCountVectorizer,self).build_analyzer()
+		return lambda doc:(stemmer.stem(w) for w in analyzer(doc))
+
+
+#Storing the entire training text in a list 
+text = list(train.text.values)
+#caliing our overwritten count vectorizer
+tf_vectorizer = PorterStemCountVectorizer(max_df=0.95,min_df=2,
+											stop_words='english',
+											decode_error='ignore')
+tf = tf_vectorizer.fit_transform(text)
+	
+
+#LDA
+lda = LatentDirichletAllocation(n_components=40,max_iter=5,
+								learning_method = 'online',
+								learning_offset = 50.,
+								random_state = 0)
+
+print (lda.fit(tf))

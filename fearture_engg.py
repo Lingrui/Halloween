@@ -195,7 +195,7 @@ plt.savefig("important_variables.png")
 
 ### Fit transform the tfidf vectorizer ###
 #tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,3))
-tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,1))
+tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,1),use_idf=False) 
 full_tfidf = tfidf_vec.fit_transform(train_df['text'].values.tolist() + test_df['text'].values.tolist())
 train_tfidf = tfidf_vec.transform(train_df['text'].values.tolist())
 test_tfidf = tfidf_vec.transform(test_df['text'].values.tolist())
@@ -239,11 +239,11 @@ del full_tfidf, train_tfidf, test_tfidf, train_svd, test_svd
 
 #Naive Bayes on Word Count Vectorizer:
 ### Fit transform the count vectorizer ###
-tfidf_vec = CountVectorizer(stop_words='english', ngram_range=(1,3))
+#tfidf_vec = CountVectorizer(stop_words='english', ngram_range=(1,3))
+tfidf_vec = CountVectorizer(stop_words='english', ngram_range=(1,1))
 tfidf_vec.fit(train_df['text'].values.tolist() + test_df['text'].values.tolist())
 train_tfidf = tfidf_vec.transform(train_df['text'].values.tolist())
 test_tfidf = tfidf_vec.transform(test_df['text'].values.tolist())
-
 
 #build Multinomial NB model using count vectorizer based features.
 cv_scores = []
@@ -267,7 +267,6 @@ train_df["nb_cvec_mws"] = pred_train[:,2]
 test_df["nb_cvec_eap"] = pred_full_test[:,0]
 test_df["nb_cvec_hpl"] = pred_full_test[:,1]
 test_df["nb_cvec_mws"] = pred_full_test[:,2]
-
 
 #Naive Bayes on Character Count Vectorizer
 ### Fit transform the tfidf vectorizer ###
@@ -327,6 +326,9 @@ test_df["nb_tfidf_char_eap"] = pred_full_test[:,0]
 test_df["nb_tfidf_char_hpl"] = pred_full_test[:,1]
 test_df["nb_tfidf_char_mws"] = pred_full_test[:,2]
 
+print("-"*90)
+print(test_df.head())
+print("-"*90)
 
 ##SVD on Character TFIDF:
 
@@ -347,7 +349,10 @@ del full_tfidf, train_tfidf, test_tfidf, train_svd, test_svd
 cols_to_drop = ['id', 'text']
 train_X = train_df.drop(cols_to_drop+['author'], axis=1)
 test_X = test_df.drop(cols_to_drop, axis=1)
-
+#########Print out training data######################
+train_X_df = pd.DataFrame(train_X)
+train_X_df.to_csv("xgb_input.csv",index=False)
+######################################################3
 kf = model_selection.KFold(n_splits=5, shuffle=True, random_state=2017)
 cv_scores = []
 pred_full_test = 0
@@ -365,7 +370,5 @@ print("cv scores : ", cv_scores)
 out_df = pd.DataFrame(pred_full_test)
 out_df.columns = ['EAP', 'HPL', 'MWS']
 out_df.insert(0, 'id', test_id)
-out_df.to_csv("sub_fe.csv", index=False)
-
-
+out_df.to_csv("sub_xgb.csv", index=False)
 

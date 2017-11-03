@@ -14,11 +14,8 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn import ensemble, metrics, model_selection, naive_bayes
 color = sns.color_palette()
 
-#%matplotlib inline
-
 eng_stopwords = set(stopwords.words("english"))
 pd.options.mode.chained_assignment = None
-
 
 ## Read the train and test dataset and check the top few lines ##
 train_df = pd.read_csv("./input/train.csv")
@@ -26,34 +23,9 @@ test_df = pd.read_csv("./input/test.csv")
 print("Number of rows in train dataset : ",train_df.shape[0])
 print("Number of rows in test dataset : ",test_df.shape[0])
 
-print(train_df.head())
-
 cnt_srs = train_df['author'].value_counts()
+print("Author\tCounts")
 print(cnt_srs)
-
-
-#check the number of occurrence of each of the author to see if the classes are balanced.
-plt.figure(figsize=(8,4))
-sns.barplot(cnt_srs.index, cnt_srs.values, alpha=0.8)
-plt.ylabel('Number of Occurrences', fontsize=12)
-plt.xlabel('Author Name', fontsize=12)
-plt.savefig("Number_of_occurrences.png")
-#plt.show()
-
-	
-#print some lines of each of the authors to try and understand their writing style if possible
-'''
-grouped_df = train_df.groupby('author')
-for name, group in grouped_df:
-    print("Author name : ", name)
-    cnt = 0
-	for ind, row in group.iterrows():
-        print(row["text"])
-        cnt += 1
-        if cnt == 5:
-            break
-    print("\n")
-'''
 
 ##META features###
 ## Number of words in the text ##
@@ -88,43 +60,11 @@ test_df["num_words_title"] = test_df["text"].apply(lambda x: len([w for w in str
 train_df["mean_word_len"] = train_df["text"].apply(lambda x: np.mean([len(w) for w in str(x).split()]))
 test_df["mean_word_len"] = test_df["text"].apply(lambda x: np.mean([len(w) for w in str(x).split()]))
 
-print(train_df.head())
-
-##number of words by author
-train_df['num_words'].loc[train_df['num_words']>80] = 80 #truncation for better visuals
-plt.figure(figsize=(12,8))
-sns.violinplot(x='author', y='num_words', data=train_df)
-plt.xlabel('Author Name', fontsize=12)
-plt.ylabel('Number of words in text', fontsize=12)
-plt.title("Number of words by author", fontsize=15)
-plt.savefig("Number_of_words.png")
-#plt.show()
-
-
-#number of punctions by author
-train_df['num_punctuations'].loc[train_df['num_punctuations']>10] = 10 #truncation for better visuals
-plt.figure(figsize=(12,8))
-sns.violinplot(x='author', y='num_punctuations', data=train_df)
-plt.xlabel('Author Name', fontsize=12)
-plt.ylabel('Number of puntuations in text', fontsize=12)
-plt.title("Number of punctuations by author", fontsize=15)
-plt.savefig("Number_of_punctions.png")
-#plt.show()
-
-
 ## Prepare the data for modeling ###
 author_mapping_dict = {'EAP':0, 'HPL':1, 'MWS':2}
 train_y = train_df['author'].map(author_mapping_dict)
 train_id = train_df['id'].values
 test_id = test_df['id'].values
-
-### recompute the trauncated variables again ###
-'''
-train_df["num_words"] = train_df["text"].apply(lambda x: len(str(x).split()))
-test_df["num_words"] = test_df["text"].apply(lambda x: len(str(x).split()))
-train_df["mean_word_len"] = train_df["text"].apply(lambda x: np.mean([len(w) for w in str(x).split()]))
-test_df["mean_word_len"] = test_df["text"].apply(lambda x: np.mean([len(w) for w in str(x).split()]))
-'''
 
 cols_to_drop = ['id', 'text']
 train_X = train_df.drop(cols_to_drop+['author'], axis=1)
@@ -134,16 +74,16 @@ test_X = test_df.drop(cols_to_drop, axis=1)
 def runXGB(train_X, train_y, test_X, test_y=None, test_X2=None, seed_val=0, child=1, colsample=0.3):
     param = {}
     param['objective'] = 'multi:softprob'
-    param['eta'] = 0.1
+    param['eta'] = 0.01
     param['max_depth'] = 3
     param['silent'] = 1
     param['num_class'] = 3
-    param['eval_metric'] = "mlogloss"
+    param['eval_metric'] = "mlogloss"  ###multiclass logloss 
     param['min_child_weight'] = child
-    param['subsample'] = 0.8
+    param['subsample'] = 0.5
     param['colsample_bytree'] = colsample
     param['seed'] = seed_val
-    num_rounds = 2000
+    num_rounds = 10000
 
     plst = list(param.items())
     xgtrain = xgb.DMatrix(train_X, label=train_y)
@@ -162,7 +102,6 @@ def runXGB(train_X, train_y, test_X, test_y=None, test_X2=None, seed_val=0, chil
         pred_test_y2 = model.predict(xgtest2, ntree_limit = model.best_ntree_limit)
     return pred_test_y, pred_test_y2, model
 
-
 ####### k-fold cross validation###############
 kf = model_selection.KFold(n_splits=5, shuffle=True, random_state=2017)
 cv_scores = []
@@ -178,24 +117,11 @@ for dev_index, val_index in kf.split(train_X):
     break
 print("cv scores : ", cv_scores)
 
-'''
-pred_train_df = pd.DataFrame(pred_train)
-joined = pd.DataFrame(train_df["id"]).join(pred_train_df)
-joined.to_csv("predictions.csv",index=False)
-'''
-
-### Plot the important variables ###
-fig, ax = plt.subplots(figsize=(12,12))
-#xgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
-xgb.plot_importance(model, height=0.8, ax=ax)
-plt.savefig("important_variables.png")
-#plt.show()
-
 ######Text Based Features#######
 
 ### Fit transform the tfidf vectorizer ###
 #tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,3))
-tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,1),use_idf=False) 
+tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,1),use_idf=True)    
 full_tfidf = tfidf_vec.fit_transform(train_df['text'].values.tolist() + test_df['text'].values.tolist())
 train_tfidf = tfidf_vec.transform(train_df['text'].values.tolist())
 test_tfidf = tfidf_vec.transform(test_df['text'].values.tolist())
@@ -219,12 +145,13 @@ for dev_index, val_index in kf.split(train_X):
     pred_full_test = pred_full_test + pred_test_y
     pred_train[val_index,:] = pred_val_y
     cv_scores.append(metrics.log_loss(val_y, pred_val_y))
+print("Naive Bayes on Word Tfidf Vectorizer")
 print("Mean cv score : ", np.mean(cv_scores))
 pred_full_test = pred_full_test / 5.
 
-
 ###SVD on word TFIDF:
-n_comp = 20
+#n_comp = 20
+n_comp = 100 ##recommended value for LSA
 svd_obj = TruncatedSVD(n_components=n_comp, algorithm='arpack')
 svd_obj.fit(full_tfidf)
 train_svd = pd.DataFrame(svd_obj.transform(train_tfidf))
@@ -235,7 +162,6 @@ test_svd.columns = ['svd_word_'+str(i) for i in range(n_comp)]
 train_df = pd.concat([train_df, train_svd], axis=1)
 test_df = pd.concat([test_df, test_svd], axis=1)
 del full_tfidf, train_tfidf, test_tfidf, train_svd, test_svd
-
 
 #Naive Bayes on Word Count Vectorizer:
 ### Fit transform the count vectorizer ###
@@ -257,6 +183,7 @@ for dev_index, val_index in kf.split(train_X):
     pred_full_test = pred_full_test + pred_test_y
     pred_train[val_index,:] = pred_val_y
     cv_scores.append(metrics.log_loss(val_y, pred_val_y))
+print("Multinomial NB model using count vectorizer based features")
 print("Mean cv score : ", np.mean(cv_scores))
 pred_full_test = pred_full_test / 5.
 
@@ -286,6 +213,7 @@ for dev_index, val_index in kf.split(train_X):
     pred_full_test = pred_full_test + pred_test_y
     pred_train[val_index,:] = pred_val_y
     cv_scores.append(metrics.log_loss(val_y, pred_val_y))
+print("Fit transform the tfidf vectorizer")
 print("Mean cv score : ", np.mean(cv_scores))
 pred_full_test = pred_full_test / 5.
 
@@ -315,6 +243,7 @@ for dev_index, val_index in kf.split(train_X):
     pred_full_test = pred_full_test + pred_test_y
     pred_train[val_index,:] = pred_val_y
     cv_scores.append(metrics.log_loss(val_y, pred_val_y))
+print("Fit transform the tfidf vectorizer")
 print("Mean cv score : ", np.mean(cv_scores))
 pred_full_test = pred_full_test / 5.
 
@@ -326,13 +255,9 @@ test_df["nb_tfidf_char_eap"] = pred_full_test[:,0]
 test_df["nb_tfidf_char_hpl"] = pred_full_test[:,1]
 test_df["nb_tfidf_char_mws"] = pred_full_test[:,2]
 
-print("-"*90)
-print(test_df.head())
-print("-"*90)
-
 ##SVD on Character TFIDF:
-
-n_comp = 20
+#n_comp = 20
+n_comp = 100
 svd_obj = TruncatedSVD(n_components=n_comp, algorithm='arpack')
 svd_obj.fit(full_tfidf)
 train_svd = pd.DataFrame(svd_obj.transform(train_tfidf))
@@ -360,7 +285,7 @@ pred_train = np.zeros([train_df.shape[0], 3])
 for dev_index, val_index in kf.split(train_X):
     dev_X, val_X = train_X.loc[dev_index], train_X.loc[val_index]
     dev_y, val_y = train_y[dev_index], train_y[val_index]
-    pred_val_y, pred_test_y, model = runXGB(dev_X, dev_y, val_X, val_y, test_X, seed_val=0, colsample=0.7)
+    pred_val_y, pred_test_y, model = runXGB(dev_X, dev_y, val_X, val_y, test_X, seed_val=0, colsample=0.5)
     pred_full_test = pred_full_test + pred_test_y
     pred_train[val_index,:] = pred_val_y
     cv_scores.append(metrics.log_loss(val_y, pred_val_y))

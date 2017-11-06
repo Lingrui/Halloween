@@ -96,8 +96,7 @@ def runXGB(train_X, train_y, test_X, test_y=None, test_X2=None, seed_val=0, chil
     else:
         xgtest = xgb.DMatrix(test_X)
         model = xgb.train(plst, xgtrain, num_rounds)
-    
-    #cvresult = xgb.cv(plst,xgtrain,num_rounds,nfold=5,metrics='merror',early_stopping_rounds=50,show_progress=False)
+
     pred_test_y = model.predict(xgtest, ntree_limit = model.best_ntree_limit)
     if test_X2 is not None:
         xgtest2 = xgb.DMatrix(test_X2)
@@ -105,22 +104,22 @@ def runXGB(train_X, train_y, test_X, test_y=None, test_X2=None, seed_val=0, chil
     return pred_test_y, pred_test_y2, model
 
 ####### k-fold cross validation###############
-def cv_val(train_X,train_y,train_df):
-    kf = model_selection.KFold(n_splits=5, shuffle=True, random_state=2017)
-    cv_scores = []
-    pred_full_test = 0
-    pred_train = np.zeros([train_df.shape[0], 3])
-    for dev_index, val_index in kf.split(train_X):
-        dev_X, val_X = train_X.loc[dev_index], train_X.loc[val_index]
-        dev_y, val_y = train_y[dev_index], train_y[val_index]
-        pred_val_y, pred_test_y, model = runXGB(dev_X, dev_y, val_X, val_y, test_X)
-        pred_full_test = pred_full_test + pred_test_y
-        pred_train[val_index,:] = pred_val_y
-        cv_scores.append(metrics.log_loss(val_y, pred_val_y))
-    pred_full_test = pred_full_test / 5.
-    return pred_full_test,cv_scores
+kf = model_selection.KFold(n_splits=5, shuffle=True, random_state=2017)
+cv_scores = []
+pred_full_test = 0
+pred_train = np.zeros([train_df.shape[0], 3])
+for dev_index, val_index in kf.split(train_X):
+    dev_X, val_X = train_X.loc[dev_index], train_X.loc[val_index]
+    dev_y, val_y = train_y[dev_index], train_y[val_index]
+    pred_val_y, pred_test_y, model = runXGB(dev_X, dev_y, val_X, val_y, test_X, seed_val=0)
+    pred_full_test = pred_full_test + pred_test_y
+    pred_train[val_index,:] = pred_val_y
+    cv_scores.append(metrics.log_loss(val_y, pred_val_y))
+    break
+print("cv scores : ", cv_scores)
 
 ######Text Based Features#######
+
 ### Fit transform the tfidf vectorizer ###
 #tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,3))
 tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,1),use_idf=True)    
@@ -136,33 +135,23 @@ def runMNB(train_X, train_y, test_X, test_y, test_X2):
     return pred_test_y, pred_test_y2, model
 
 #Naive Bayes on Word Tfidf Vectorizer:
-def cv_val_tfidf(train_X,train_y,train_df,test_tfidf):
-    cv_scores = []
-    pred_full_test = 0
-    pred_train = np.zeros([train_df.shape[0], 3])
-    kf = model_selection.KFold(n_splits=5, shuffle=True, random_state=2017)
-    for dev_index, val_index in kf.split(train_X):
-        dev_X, val_X = train_tfidf[dev_index], train_tfidf[val_index]
-        dev_y, val_y = train_y[dev_index], train_y[val_index]
-        pred_val_y, pred_test_y, model = runMNB(dev_X, dev_y, val_X, val_y, test_tfidf)
-        pred_full_test = pred_full_test + pred_test_y
-        pred_train[val_index,:] = pred_val_y
-        cv_scores.append(metrics.log_loss(val_y, pred_val_y))
-    pred_full_test = pred_full_test / 5.
-    return pred_full_test,cv_scores 
-pred_full_test, cv_scores = cv_val_tfidf(train_X,train_y,train_df,test_tfidf)
+cv_scores = []
+pred_full_test = 0
+pred_train = np.zeros([train_df.shape[0], 3])
+kf = model_selection.KFold(n_splits=5, shuffle=True, random_state=2017)
+for dev_index, val_index in kf.split(train_X):
+    dev_X, val_X = train_tfidf[dev_index], train_tfidf[val_index]
+    dev_y, val_y = train_y[dev_index], train_y[val_index]
+    pred_val_y, pred_test_y, model = runMNB(dev_X, dev_y, val_X, val_y, test_tfidf)
+    pred_full_test = pred_full_test + pred_test_y
+    pred_train[val_index,:] = pred_val_y
+    cv_scores.append(metrics.log_loss(val_y, pred_val_y))
 print("Naive Bayes on Word Tfidf Vectorizer")
 print("Mean cv score : ", np.mean(cv_scores))
-
-#add the predictions as new features
-train_df["nb_tfidf_word_eap"] = pred_train[:,0]
-train_df["nb_tfidf_word_hpl"] = pred_train[:,1]
-train_df["nb_tfidf_word_mws"] = pred_train[:,2]
-test_df["nb_tfidf_word_eap"] = pred_full_test[:,0]
-test_df["nb_tfidf_word_hpl"] = pred_full_test[:,1]
-test_df["nb_tfidf_word_mws"] = pred_full_test[:,2]
+pred_full_test = pred_full_test / 5.
 
 ###SVD on word TFIDF:
+#n_comp = 20
 n_comp = 100 ##recommended value for LSA
 svd_obj = TruncatedSVD(n_components=n_comp, algorithm='arpack')
 svd_obj.fit(full_tfidf)
@@ -282,6 +271,7 @@ test_df = pd.concat([test_df, test_svd], axis=1)
 del full_tfidf, train_tfidf, test_tfidf, train_svd, test_svd
 
 ###XGBoost model:
+
 cols_to_drop = ['id', 'text']
 train_X = train_df.drop(cols_to_drop+['author'], axis=1)
 test_X = test_df.drop(cols_to_drop, axis=1)
@@ -289,8 +279,20 @@ test_X = test_df.drop(cols_to_drop, axis=1)
 train_X_df = pd.DataFrame(train_X)
 train_X_df.to_csv("xgb_input.csv",index=False)
 ######################################################3
-pred_full_test, cv_score = cv_val(train_X,train_y,train_df)
-print("cv scores : ", cv_score)
+kf = model_selection.KFold(n_splits=5, shuffle=True, random_state=2017)
+cv_scores = []
+pred_full_test = 0
+pred_train = np.zeros([train_df.shape[0], 3])
+for dev_index, val_index in kf.split(train_X):
+    dev_X, val_X = train_X.loc[dev_index], train_X.loc[val_index]
+    dev_y, val_y = train_y[dev_index], train_y[val_index]
+    pred_val_y, pred_test_y, model = runXGB(dev_X, dev_y, val_X, val_y, test_X, seed_val=0, colsample=0.5)
+    pred_full_test = pred_full_test + pred_test_y
+    pred_train[val_index,:] = pred_val_y
+    cv_scores.append(metrics.log_loss(val_y, pred_val_y))
+    break
+print("cv scores : ", cv_scores)
+
 out_df = pd.DataFrame(pred_full_test)
 out_df.columns = ['EAP', 'HPL', 'MWS']
 out_df.insert(0, 'id', test_id)

@@ -147,14 +147,12 @@ def tfidf_word(train_X,train_y,train_df,test_df):
     print("Naive Bayes on Word Tfidf Vectorizer")
     print("Mean cv score : ", np.mean(cv_scores))
     #add the predictions as new features
-    '''
     train_df["nb_tfidf_word_eap"] = pred_train[:,0]
     train_df["nb_tfidf_word_hpl"] = pred_train[:,1]
     train_df["nb_tfidf_word_mws"] = pred_train[:,2]
     test_df["nb_tfidf_word_eap"] = pred_full_test[:,0]
     test_df["nb_tfidf_word_hpl"] = pred_full_test[:,1]
     test_df["nb_tfidf_word_mws"] = pred_full_test[:,2]
-    '''
 	###SVD on word TFIDF:
     n_comp = 100 ##recommended value for LSA
     svd_obj = TruncatedSVD(n_components=n_comp, algorithm='arpack')

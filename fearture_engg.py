@@ -148,7 +148,7 @@ def cv_mnb(train_X,train_y,train_df,train_tfidf,test_tfidf):
 ### Fit transform the tfidf vectorizer ###
 def tfidf_word(train_X,train_y,train_df,test_df):
 	#tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,1),use_idf=True)    
-    tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,2),use_idf=True)    
+    tfidf_vec = TfidfVectorizer(stop_words='english', ngram_range=(1,3),use_idf=True)    
     full_tfidf = tfidf_vec.fit_transform(train_df['text'].values.tolist() + test_df['text'].values.tolist())
     train_tfidf = tfidf_vec.transform(train_df['text'].values.tolist())
     test_tfidf = tfidf_vec.transform(test_df['text'].values.tolist())
@@ -179,7 +179,7 @@ def tfidf_word(train_X,train_y,train_df,test_df):
 ### Fit transform the count vectorizer ###
 def CountV_word(train_X,train_y,train_df,test_df):
 	#tfidf_vec = CountVectorizer(stop_words='english', ngram_range=(1,1))
-    tfidf_vec = CountVectorizer(stop_words='english', ngram_range=(1,2))
+    tfidf_vec = CountVectorizer(stop_words='english', ngram_range=(1,3))
     tfidf_vec.fit(train_df['text'].values.tolist() + test_df['text'].values.tolist())
     train_tfidf = tfidf_vec.transform(train_df['text'].values.tolist())
     test_tfidf = tfidf_vec.transform(test_df['text'].values.tolist())
@@ -199,7 +199,7 @@ def CountV_word(train_X,train_y,train_df,test_df):
 #Naive Bayes on Character Count Vectorizer
 ### Fit transform the tfidf vectorizer ###
 def CountV_char(train_X,train_y,train_df,test_df):
-    tfidf_vec = CountVectorizer(ngram_range=(1,7), analyzer='char')
+    tfidf_vec = CountVectorizer(ngram_range=(1,10), analyzer='char')
     tfidf_vec.fit(train_df['text'].values.tolist() + test_df['text'].values.tolist())
     train_tfidf = tfidf_vec.transform(train_df['text'].values.tolist())
     test_tfidf = tfidf_vec.transform(test_df['text'].values.tolist())
@@ -218,7 +218,7 @@ def CountV_char(train_X,train_y,train_df,test_df):
 #Naive Bayes on Character Tfidf Vectorizer:
 ### Fit transform the tfidf vectorizer ###
 def tfidf_char(train_X,train_y,train_df,test_df):
-    tfidf_vec = TfidfVectorizer(ngram_range=(1,5), analyzer='char')
+    tfidf_vec = TfidfVectorizer(ngram_range=(1,10), analyzer='char')
     full_tfidf = tfidf_vec.fit_transform(train_df['text'].values.tolist() + test_df['text'].values.tolist())
     train_tfidf = tfidf_vec.transform(train_df['text'].values.tolist())
     test_tfidf = tfidf_vec.transform(test_df['text'].values.tolist())

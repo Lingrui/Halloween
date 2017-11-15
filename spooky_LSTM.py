@@ -45,8 +45,13 @@ data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
 labels = to_categorical(np.asarray(train_y))
 print('Shape of data tensor:', data.shape)
 print('Shape of label tensor:', labels.shape)
+x_train = data
+##prepare test data
+test_df = pd.read_csv("/home/lcai/s2/Halloween/input/test.csv")
+test.id = test_df['id'].values
 
 # split the data into a training set and a validation set
+'''
 indices = np.arange(data.shape[0])
 np.random.shuffle(indices)
 data = data[indices]
@@ -57,7 +62,7 @@ x_train = data[:-num_validation_samples]
 y_train = labels[:-num_validation_samples]
 x_val = data[-num_validation_samples:]
 y_val = labels[-num_validation_samples:]
-
+'''
 
 print('Training model.')
 

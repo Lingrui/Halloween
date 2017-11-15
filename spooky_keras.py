@@ -19,8 +19,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-BASE_DIR = '.'  
-#GLOVE_DIR = BASE_DIR + '/glove.6B/' 
+BASE_DIR = '/home/lcai/s2/Keras_IMDB'  
 GLOVE_DIR = os.path.join(BASE_DIR, 'glove.6B')
 TEXT_DATA_DIR = os.path.join(BASE_DIR,'20_newsgroup')
 MAX_SEQUENCE_LENGTH = 1000 #max words in a document
@@ -46,36 +45,6 @@ print('Found %s word vectors.' %len(embeddings_index))
 
 # second, prepare text samples and their labels
 print('Processing text dataset')
-'''
-texts = []  # list of text samples
-labels_index = {}  # dictionary mapping label name to numeric id
-labels = []  # list of label ids
-for name in sorted(os.listdir(TEXT_DATA_DIR)):
-    path = os.path.join(TEXT_DATA_DIR,name)
-    if os.path.isdir(path):
-        label_id = len(labels_index)
-        #print("label_id:",label_id)
-        labels_index[name] = label_id
-        #print("length of labels_index:")
-
-        for fname in sorted(os.listdir(path)):
-            #print("fname:",fname)
-            if fname.isdigit():
-                fpath = os.path.join(path,fname)
-                if sys.version_info < (3,): ###to build in detection of any major or minor Python release
-                    f = open(fpath)
-                else:
-                    f = open(fpath, encoding='latin-1')
-                t = f.read() ##read n number of characters from the file, if n is blank it reads the entire file
-                i = t.find('\n\n') #if true, return position, else return "-1"
-                if 0 < i:
-                    t = t[i:]
-                texts.append(t)
-                f.close()
-                labels.append(label_id)
-
-print('Found %s texts.' %len(texts))
-'''
 input_df = pd.read_csv("/home/lcai/s2/Halloween/input/train.csv")
 author_mapping_dict = {'EAP':0,'HPL':1,'MWS':2}
 train_y = input_df['author'].map(author_mapping_dict)
@@ -100,9 +69,13 @@ labels = labels[indices]
 num_validation_samples = int(VALIDATION_SPLIT * data.shape[0])
 
 x_train = data[:-num_validation_samples]
+print("x_train:",x_train[1])
 y_train = labels[:-num_validation_samples]
+print("y_train:",y_train[1])
 x_val = data[-num_validation_samples:]
+print("x_val:",x_val[1])
 y_val = labels[-num_validation_samples:]
+print("y_val:",y_val[1])
 
 print('Preparing embedding matrix.')
 

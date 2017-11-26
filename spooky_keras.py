@@ -123,7 +123,7 @@ model.compile(loss='categorical_crossentropy',
                 metrics=['acc'])
 '''
 #train a 1D convnet with global maxpoolinnb_wordsg
-#lsft model 
+#left model 
 model_left = Sequential()
 model_left.add(embedding_layer)
 model_left.add(Conv1D(128,5,activation='relu'))
@@ -155,6 +155,19 @@ model_third.add(MaxPooling1D(6))
 model_third.add(Conv1D(128,6,activation='relu'))
 model_third.add(MaxPooling1D(21))
 model_third.add(Flatten())
+
+#forth model 
+model_forth = Sequential()
+model_forth.add(embedding_layer)
+model_forth.add(Conv1D(128,3,activation='relu'))
+model_forth.add(MaxPooling1D(3))
+model_forth.add(Conv1D(128,3,activation='relu'))
+model_forth.add(MaxPooling1D(3))
+model_forth.add(Conv1D(128,3,activation='relu'))
+model_forth.add(MaxPooling1D(21))
+model_forth.add(Flatten())
+
+
 
 merged = Merge([model_left,model_right,model_third],mode='concat')
 model = Sequential()

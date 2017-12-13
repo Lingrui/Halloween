@@ -113,12 +113,11 @@ def main():
     test_data['nb_countv_w_1'] = pred_test[:,1]
     test_data['nb_countv_w_2'] = pred_test[:,2]
     os.system('date')
-
     print ('Xgboost...')
     cols_to_drop = ['id','text']
     train_X = training_data.drop(cols_to_drop+['author'], axis=1).as_matrix()
     test_X = test_data.drop(cols_to_drop, axis=1).as_matrix()
-    pred_X,pred_x=cv_xgb(model_xgb,train_X,train_y,test_X)  
+    pred_X,pred_x=cv(model_xgb,train_X,train_y,test_X)  
 
     os.system('date')
     print ('Writing prediction to prediction.csv')
@@ -208,10 +207,10 @@ def cv_xgb(model,X,Y,x):
     i = 0 
     for train, val in kf.split(X):
         i += 1
-        model.fit(X[train, :], Y[train], eval_metric='mlogloss', early_stopping_rounds=50)
+        model.fit(X[train, :], Y[train],eval_metric=mlogloss, early_stopping_rounds=50)
         pred = model.predict_proba(X[val,:])
         print("logloss %d / %d:" % (i,K),metrics.log_loss(Y[val],pred))
-    model.fit(X,Y,eval_metric='mlogloss', early_stopping_rounds=50)
+    model.fit(X,Y,eval_metric=mlogloss, early_stopping_rounds=50)
     
     if re.match('XGB',str(model)):
         f = open ("./feature.txt","w+")

@@ -20,7 +20,7 @@ from keras.utils import to_categorical
 
 from sklearn.model_selection import train_test_split
 
-np.random.seed(7) 
+np.random.seed(2017) 
 
 df = pd.read_csv('./input/train.csv')
 a2c = {'EAP': 0, 'HPL' : 1, 'MWS' : 2}
@@ -190,8 +190,5 @@ y = model.predict_proba(docs)
 #result = pd.read_csv('./input/sample_submission.csv')
 out_df = pd.DataFrame(y)
 out_df.to_csv("fasttext_pred.csv", index=False)
-
-
-
 
 
